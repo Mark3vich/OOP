@@ -115,7 +115,7 @@ public:
         this->speed = speed;
         this->impactAccuracy = impactAccuracy;
     }
-    void getInfoPlayer() 
+    void getInfoPlayer()
     {
         cout << "Имя: " << this->name << endl;
         cout << "Вес: " << this->weight << endl;
@@ -127,33 +127,33 @@ public:
         cout << endl;
     }
 
-    string getNamePlayer() 
+    string getNamePlayer()
     {
         return this->name;
     }
 
-    void addViolationPlayer(const string &violation) 
+    void addViolationPlayer(const string &violation)
     {
         this->violations.addViolation(violation);
     }
 
-    void getViolationsPlayer() 
+    void getViolationsPlayer()
     {
         cout << "Предупреждения: " << endl;
         this->violations.getViolations();
     }
 
-    void addHitPlayer() 
+    void addHitPlayer()
     {
         this->statisticsAboutUser.addHit();
     }
 
-    void addBlunderPlayer() 
+    void addBlunderPlayer()
     {
         this->statisticsAboutUser.addBlunder();
     }
 
-    void getStatisticsAboutHits() 
+    void getStatisticsAboutHits()
     {
         this->statisticsAboutUser.getHits();
         this->statisticsAboutUser.getBlunders();
@@ -486,12 +486,31 @@ public:
     }
 };
 
+// Сингелтон или одиночка (порождающий паттерн)
 class Tournament
 {
 private:
     int numberOfRounds = 0;
 
+    static Tournament *instance; // Указатель на единственный экземпляр
+
+    // Приватный конструктор, чтобы предотвратить создание объектов вне класса
+    Tournament() {}
+
+    // Приватный деструктор (не обязателен, но рекомендуется)
+    ~Tournament() {}
+
 public:
+    // Статический метод для получения единственного экземпляра
+    static Tournament *getInstance()
+    {
+        if (instance == nullptr)
+        {
+            instance = new Tournament();
+        }
+        return instance;
+    }
+
     void addRound()
     {
         if (this->numberOfRounds > MAXIMUM_NUMBER_OF_ROUNDS)
@@ -510,7 +529,13 @@ public:
     {
         cout << "Количество оставшихся раундов: " << MAXIMUM_NUMBER_OF_ROUNDS - this->numberOfRounds << endl;
     }
+
+    // Удаляем копирующий конструктор и оператор присваивания, чтобы предотвратить копирование
+    Tournament(const Tournament &) = delete;
+    Tournament &operator=(const Tournament &) = delete;
 };
+
+Tournament *Tournament::instance = nullptr;
 
 class Score
 {
@@ -568,76 +593,97 @@ public:
     }
 };
 
-class Game {
+class Game
+{
 private:
     Team team1;
     Team team2;
     Score score;
-    Tournament tournament;
+    Tournament *tournament;
     Break breakInfo;
     TimeOut timeOutInfo;
 
 public:
-    Game(const Team &team1, const Team &team2) : team1(team1), team2(team2) {}
+    Game(const Team &team1, const Team &team2) : team1(team1), team2(team2)
+    {
+        this->tournament = Tournament::getInstance();
+    }
 
-    bool checkTeams() {
+    bool checkTeams()
+    {
         bool isFlag = true;
-        if (!this->team1.checkTeam()) {
+        if (!this->team1.checkTeam())
+        {
             cout << "В команде 1 присудствует ошибка при распределении игроков. Повторите попытку" << endl;
             isFlag = false;
         }
-        if (!this->team2.checkTeam()) {
+        if (!this->team2.checkTeam())
+        {
             cout << "В команде 2 присудствует ошибка при распределении игроков. Повторите попытку" << endl;
             isFlag = false;
         }
         return isFlag;
     }
 
-    void start() {
-        if (!checkTeams()) {
+    void start()
+    {
+        if (!checkTeams())
+        {
             return;
         }
         cout << "Игра началась" << endl;
-        this->tournament.addRound();
+        this->tournament->addRound();
         this->score.getScore();
-        this->breakInfo.getInfoBreak(this->tournament.getNumberOfRounds());
+        this->breakInfo.getInfoBreak(this->tournament->getNumberOfRounds());
         this->timeOutInfo.getTimeOut();
     }
 
-    void scored(Team team, const int &points, const string &name) {
+    void scored(Team team, const int &points, const string &name)
+    {
         this->score.addHitPlayer(team.getPlayers(), points, name); // статистика
-        if (team.getTeamNumber() == 1) {
+        if (team.getTeamNumber() == 1)
+        {
             this->score.addPointsFirstTeam(points);
-        } else {
+        }
+        else
+        {
             this->score.addPointsSecondTeam(points);
         }
         this->score.getScore();
     }
 
-    void timeOut(Team &team) {
-        team.addTimeOut(this->tournament.getNumberOfRounds());
+    void timeOut(Team &team)
+    {
+        team.addTimeOut(this->tournament->getNumberOfRounds());
     }
 
-    void endOfTheHalf(Team &team, Team &team2) {
+    void endOfTheHalf(Team &team, Team &team2)
+    {
         this->score.getScore();
-        this->tournament.addRound();
-        this->breakInfo.getInfoBreak(this->tournament.getNumberOfRounds());
-        this->tournament.getNumberOfRemainingRounds();
+        this->tournament->addRound();
+        this->breakInfo.getInfoBreak(this->tournament->getNumberOfRounds());
+        this->tournament->getNumberOfRemainingRounds();
         team.getTimeOut();
         team2.getTimeOut();
     }
 
-    void stop() {
+    void stop()
+    {
         this->score.getScore();
-        if (this->score.getNumberOfPointsInTheFirstTeam() > this->score.getNumberOfPointsInTheSecondTeam()) {
+        if (this->score.getNumberOfPointsInTheFirstTeam() > this->score.getNumberOfPointsInTheSecondTeam())
+        {
             cout << "Победила команда под номером 1" << endl;
             this->team1.addWin();
             this->team2.addLose();
-        } else if (this->score.getNumberOfPointsInTheFirstTeam() == this->score.getNumberOfPointsInTheSecondTeam()) {
+        }
+        else if (this->score.getNumberOfPointsInTheFirstTeam() == this->score.getNumberOfPointsInTheSecondTeam())
+        {
             cout << "Ничья" << endl;
             this->team1.addDraw();
             this->team2.addDraw();
-        } else {
+        }
+        else
+        {
             cout << "Победила команда под номером 2" << endl;
             this->team1.addLose();
             this->team2.addWin();
@@ -652,19 +698,20 @@ public:
         this->team2.getDraw();
 
         cout << "Статистика по 1 команде" << endl;
-        for (int i = 0; i < this->team1.getPlayers().size(); i++) {
+        for (int i = 0; i < this->team1.getPlayers().size(); i++)
+        {
             cout << this->team1.getPlayers()[i].getNamePlayer() << endl;
             this->team1.getPlayers()[i].getStatisticsAboutHits();
         }
 
         cout << "Статистика по 2 команде" << endl;
-        for (int i = 0; i < this->team2.getPlayers().size(); i++) {
+        for (int i = 0; i < this->team2.getPlayers().size(); i++)
+        {
             cout << this->team2.getPlayers()[i].getNamePlayer() << endl;
             this->team2.getPlayers()[i].getStatisticsAboutHits();
         }
     }
 };
-
 
 int main(int argc, char const *argv[])
 {
