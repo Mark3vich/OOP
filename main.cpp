@@ -537,6 +537,7 @@ public:
 
 Tournament *Tournament::instance = nullptr;
 
+// Итератор (поведенческий паттерн)
 class Score
 {
 private:
@@ -565,15 +566,15 @@ public:
     }
     void addHitPlayer(vector<Player> team, const int &points, const string &name)
     {
-        for (auto it = team.begin(); it != team.end(); it++)
+        for (vector<Player>::iterator it = team.begin(); it != team.end(); ++it)
         {
             if (it->getNamePlayer() == name)
             {
                 it->addHitPlayer(); // увеличиваем количество попаданий в статистике игрока
+                cout << name << " получает " << points << " очков." << endl;
                 break;
             }
         }
-        cout << name << " получает " << points << " очков." << endl;
     }
 };
 
@@ -593,6 +594,7 @@ public:
     }
 };
 
+// паттерн фасад (структурный шаблон)
 class Game
 {
 private:
