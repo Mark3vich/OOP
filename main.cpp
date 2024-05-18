@@ -600,10 +600,10 @@ class Game
 private:
     Team team1;
     Team team2;
-    Score score;
-    Tournament *tournament;
-    Break breakInfo;
-    TimeOut timeOutInfo;
+    Score score; 
+    Tournament *tournament; 
+    Break breakInfo; 
+    TimeOut timeOutInfo; 
 
 public:
     Game(const Team &team1, const Team &team2) : team1(team1), team2(team2)
@@ -627,6 +627,7 @@ public:
         return isFlag;
     }
 
+    // пример функции для паттерна фасад
     void start()
     {
         if (!checkTeams())
